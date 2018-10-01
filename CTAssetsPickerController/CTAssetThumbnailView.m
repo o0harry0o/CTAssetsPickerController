@@ -132,7 +132,7 @@
 
 - (void)setupOverlayForAsset:(PHAsset *)asset
 {
-    if (asset.ctassetsPickerIsVideo)
+    if (asset.ctassetsPickerIsVideo ||asset.ctassetsPickerIsPhoto)
     {
         if (!self.overlay) {
             self.overlay = [[CTAssetThumbnailOverlay alloc] initWithFrame:self.bounds];

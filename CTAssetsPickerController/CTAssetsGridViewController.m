@@ -40,18 +40,19 @@
 #import "NSIndexSet+CTAssetsPickerController.h"
 #import "NSBundle+CTAssetsPickerController.h"
 #import "PHImageManager+CTAssetsPickerController.h"
-
-
-
-
-
+#import "PHAsset+CTPHAsset.h"
+#import "MBProgressHUD.h"
+#import "PHAsset+CTAssetsPickerController.h"
+#import "PHAssetCollection+CTAssetsPickerController.h"
 NSString * const CTAssetsGridViewCellIdentifier = @"CTAssetsGridViewCellIdentifier";
 NSString * const CTAssetsGridViewFooterIdentifier = @"CTAssetsGridViewFooterIdentifier";
 
-
-@interface CTAssetsGridViewController ()
-<PHPhotoLibraryChangeObserver>
-
+static PHFetchResult* staticFetchResultVideo;
+static PHFetchResult* staticFetchResultPhoto;
+@interface CTAssetsGridViewController ()<PHPhotoLibraryChangeObserver>
+{
+    MBProgressHUD* _hud;
+}
 @property (nonatomic, weak) CTAssetsPickerController *picker;
 @property (nonatomic, strong) PHFetchResult *fetchResult;
 @property (nonatomic, strong) PHCachingImageManager *imageManager;
@@ -196,10 +197,71 @@ NSString * const CTAssetsGridViewFooterIdentifier = @"CTAssetsGridViewFooterIden
     [PHAsset fetchAssetsInAssetCollection:self.assetCollection
                                   options:self.picker.assetsFetchOptions];
     
-    self.fetchResult = fetchResult;
-    [self reloadData];
+//    self.fetchResult = fetchResult;
+    _hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    _hud.label.text = @"Loading data ...";
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [self loadFileSize:fetchResult];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self reloadData];
+            [_hud hideAnimated:YES];
+        });
+        
+    });
+    
 }
-
+- (void)loadFileSize:(PHFetchResult*)fetchResult
+{
+    PHFetchResult* savedFetch = [self getSavedFetchResult:fetchResult];
+    if(savedFetch.count>0 && savedFetch.count == fetchResult.count)
+    {
+        self.fetchResult = savedFetch;
+        return;
+    }
+    int count = 0;
+    for( PHAsset*asset in fetchResult)
+    {
+        PHAssetResource* res = [PHAssetResource assetResourcesForAsset:asset].firstObject;
+        count++;
+        if(asset.fileSize>0)
+        {
+            break;
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            _hud.label.text = [NSString stringWithFormat:@"Loading %d/%d Files",count,fetchResult.count];
+        });
+        long long unsignedInt = [[res valueForKey:@"fileSize"] longLongValue];
+        asset.fileSize = unsignedInt;
+    }
+    
+    self.fetchResult = fetchResult;
+    [self saveFetchResult];
+}
+-(void)saveFetchResult
+{
+    PHAsset* asset = self.fetchResult.firstObject;
+    if(asset && asset.ctassetsPickerIsVideo)
+    {
+        staticFetchResultVideo = self.fetchResult;
+    }
+    else
+    {
+        staticFetchResultPhoto = self.fetchResult;
+    }
+    
+}
+- (PHFetchResult*)getSavedFetchResult:(PHFetchResult*)fetchResult
+{
+    PHAsset* asset = fetchResult.firstObject;
+    if(asset && asset.ctassetsPickerIsVideo)
+    {
+        return staticFetchResultVideo;
+    }
+    else
+    {
+        return staticFetchResultPhoto;
+    }
+}
 
 
 

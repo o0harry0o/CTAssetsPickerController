@@ -143,6 +143,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, strong) UISplitViewController *childSplitViewController;
 
 
+@property (nonatomic, strong) PHFetchResult* keepFetchResult;
+
 /**
  *  @name Managing Selections
  */

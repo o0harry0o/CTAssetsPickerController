@@ -31,31 +31,99 @@
 
 - (void)pickAssets:(id)sender
 {
-    [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status){
-        dispatch_async(dispatch_get_main_queue(), ^{
-            
-            // init picker
-            CTAssetsPickerController *picker = [[CTAssetsPickerController alloc] init];
-            
-            // set delegate
-            picker.delegate = self;
-            
-            // create options for fetching photo only
-            PHFetchOptions *fetchOptions = [PHFetchOptions new];
-            fetchOptions.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
-            
-            // assign options
-            picker.assetsFetchOptions = fetchOptions;
-            
-            // to present picker as a form sheet in iPad
-            if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-                picker.modalPresentationStyle = UIModalPresentationFormSheet;
-            
-            // present picker
-            [self presentViewController:picker animated:YES completion:nil];
-            
-        });
-    }];
+    [self showSelectAlert:^(int selection) {
+        if(selection == 0)
+        {
+            [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status){
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    
+                    // init picker
+                    CTAssetsPickerController *picker = [[CTAssetsPickerController alloc] init];
+                    
+                    // set delegate
+                    picker.delegate = self;
+                    picker.defaultAssetCollection = PHAssetCollectionSubtypeSmartAlbumUserLibrary;
+                    // create options for fetching photo only
+                    PHFetchOptions *fetchOptions = [PHFetchOptions new];
+                    fetchOptions.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeImage];
+                    fetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"duration" ascending:NO]];
+                    // assign options
+                    picker.assetsFetchOptions = fetchOptions;
+                    
+                    // to present picker as a form sheet in iPad
+                    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+                        picker.modalPresentationStyle = UIModalPresentationFormSheet;
+                    
+                    // present picker
+                    [self presentViewController:picker animated:YES completion:nil];
+                    
+                });
+            }];
+        }
+        else if(selection == 1)
+        {
+            [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status){
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    
+                    // init picker
+                    CTAssetsPickerController *picker = [[CTAssetsPickerController alloc] init];
+                    
+                    // set delegate
+                    picker.delegate = self;
+                    picker.defaultAssetCollection = PHAssetCollectionSubtypeSmartAlbumUserLibrary;
+                    // create options for fetching photo only
+                    PHFetchOptions *fetchOptions = [PHFetchOptions new];
+                    fetchOptions.predicate = [NSPredicate predicateWithFormat:@"mediaType == %d", PHAssetMediaTypeVideo];
+                    fetchOptions.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"duration" ascending:NO]];
+                    // assign options
+                    picker.assetsFetchOptions = fetchOptions;
+                    
+                    // to present picker as a form sheet in iPad
+                    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+                        picker.modalPresentationStyle = UIModalPresentationFormSheet;
+                    
+                    // present picker
+                    [self presentViewController:picker animated:YES completion:nil];
+                    
+                });
+            }];
+        }
+    } sender:sender];
+    
 }
+#pragma mark Action Sheet
+- (void)showSelectAlert:(void (^ __nullable)(int))completion sender:(id)sender
+{
+    UIView* button = sender;
+    if([sender isKindOfClass:[UIBarButtonItem class]])
+    {
+        button = [sender customView];
+    }
+    
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@""
+                                                                   message:@"File Type"
+                                                            preferredStyle:UIAlertControllerStyleActionSheet];
+    
+    UIAlertAction*  cancelAction = [UIAlertAction actionWithTitle:@"Close" style:UIAlertActionStyleDefault
+                                                          handler:^(UIAlertAction * action) {
+                                                              completion(-1);
+                                                          }];
+    UIAlertAction*  photoAction = [UIAlertAction actionWithTitle:@"Photo" style:UIAlertActionStyleDefault
+                                                         handler:^(UIAlertAction * action) {
+                                                             completion(0);
+                                                         }];
+    UIAlertAction*  videoAction = [UIAlertAction actionWithTitle:@"Video" style:UIAlertActionStyleDefault
+                                                        handler:^(UIAlertAction * action) {
+                                                            completion(1);
+                                                        }];
+    
 
+    [alert addAction:photoAction];
+    [alert addAction:videoAction];
+    [alert addAction:cancelAction];
+    alert.popoverPresentationController.sourceView = button;
+    [alert.popoverPresentationController setPermittedArrowDirections:UIPopoverArrowDirectionUp];
+    alert.popoverPresentationController.sourceRect = CGRectMake(button.bounds.size.width/2, button.bounds.size.height-25, 1.0, 1.0);
+    [self presentViewController:alert animated:YES completion:nil];
+}
 @end

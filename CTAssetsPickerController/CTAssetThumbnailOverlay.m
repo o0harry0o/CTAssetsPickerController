@@ -29,7 +29,7 @@
 #import "UIImage+CTAssetsPickerController.h"
 #import "PHAsset+CTAssetsPickerController.h"
 #import "PHAssetCollection+CTAssetsPickerController.h"
-
+#import "PHAsset+CTPHAsset.h"
 
 
 @interface CTAssetThumbnailOverlay ()
@@ -115,11 +115,39 @@
     self.badge.image = [asset badgeImage];
     self.badge.layoutMargins = [self layoutMarginsForAsset:asset];
     self.duration.text = duration;
-    
+    int min = [[duration componentsSeparatedByString:@":"].firstObject intValue];
+    int sec = [[duration componentsSeparatedByString:@":"].lastObject intValue];
+    //    if(min*60+sec>120)
+    //    {
+    //        PHAssetResource* res = [PHAssetResource assetResourcesForAsset:asset].firstObject;
+    //        long long unsignedInt = [[res valueForKey:@"fileSize"] longLongValue];
+    //        NSString* str = [self convertBytesToString:unsignedInt];
+    //        NSLog(@"str = %@",str);
+    //        self.duration.text = str;
+    //    }
+    if(asset.fileSize==0)
+    {
+        PHAssetResource* res = [PHAssetResource assetResourcesForAsset:asset].firstObject;
+        long long unsignedInt = [[res valueForKey:@"fileSize"] longLongValue];
+        asset.fileSize = unsignedInt;
+    }
+    else
+    {
+        NSLog(@"longSize = %lld",asset.fileSize);
+    }
+    NSString* str = [self convertBytesToString:asset.fileSize];
+    NSLog(@"str = %@",str);
+    self.duration.text = str;
+    self.duration.backgroundColor = [UIColor colorWithWhite:0.2 alpha:0.5];
     [self setNeedsUpdateConstraints];
     [self updateConstraintsIfNeeded];
 }
-
+- (NSString*)convertBytesToString:(long long) bytes
+{
+    NSByteCountFormatter* format = [[NSByteCountFormatter alloc]init];
+    format.countStyle = NSByteCountFormatterCountStyleBinary;
+    return [format stringFromByteCount:bytes];
+}
 - (UIEdgeInsets)layoutMarginsForAsset:(PHAsset *)asset
 {
     if (asset.ctassetsPickerIsHighFrameRateVideo)
