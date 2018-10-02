@@ -38,7 +38,7 @@
 #import "UIImage+CTAssetsPickerController.h"
 #import "NSNumberFormatter+CTAssetsPickerController.h"
 #import "CTAssetsNavigationController.h"
-
+#import "PHAsset+CTPHAsset.h"
 
 
 NSString * const CTAssetsPickerSelectedAssetsDidChangeNotification = @"CTAssetsPickerSelectedAssetsDidChangeNotification";
@@ -534,30 +534,36 @@ NSString * const CTAssetsPickerDidDeselectAssetNotification = @"CTAssetsPickerDi
     if (self.selectedAssets.count == 0)
         return nil;
     
-    NSPredicate *photoPredicate = [self predicateOfMediaType:PHAssetMediaTypeImage];
-    NSPredicate *videoPredicate = [self predicateOfMediaType:PHAssetMediaTypeVideo];
-    
-    BOOL photoSelected = ([self.selectedAssets filteredArrayUsingPredicate:photoPredicate].count > 0);
-    BOOL videoSelected = ([self.selectedAssets filteredArrayUsingPredicate:videoPredicate].count > 0);
-    
-    NSString *format;
-    
-    if (photoSelected && videoSelected)
-        format = CTAssetsPickerLocalizedString(@"%@ Items Selected", nil);
-    
-    else if (photoSelected)
-        format = (self.selectedAssets.count > 1) ?
-        CTAssetsPickerLocalizedString(@"%@ Photos Selected", nil) :
-        CTAssetsPickerLocalizedString(@"%@ Photo Selected", nil);
-    
-    else if (videoSelected)
-        format = (self.selectedAssets.count > 1) ?
-        CTAssetsPickerLocalizedString(@"%@ Videos Selected", nil) :
-        CTAssetsPickerLocalizedString(@"%@ Video Selected", nil);
-    
-    NSNumberFormatter *nf = [NSNumberFormatter new];
-    
-    return [NSString stringWithFormat:format, [nf ctassetsPickerStringFromAssetsCount:self.selectedAssets.count]];
+//    NSPredicate *photoPredicate = [self predicateOfMediaType:PHAssetMediaTypeImage];
+//    NSPredicate *videoPredicate = [self predicateOfMediaType:PHAssetMediaTypeVideo];
+//
+//    BOOL photoSelected = ([self.selectedAssets filteredArrayUsingPredicate:photoPredicate].count > 0);
+//    BOOL videoSelected = ([self.selectedAssets filteredArrayUsingPredicate:videoPredicate].count > 0);
+//
+//    NSString *format;
+//
+//    if (photoSelected && videoSelected)
+//        format = CTAssetsPickerLocalizedString(@"%@ Items Selected", nil);
+//
+//    else if (photoSelected)
+//        format = (self.selectedAssets.count > 1) ?
+//        CTAssetsPickerLocalizedString(@"%@ Photos Selected", nil) :
+//        CTAssetsPickerLocalizedString(@"%@ Photo Selected", nil);
+//
+//    else if (videoSelected)
+//        format = (self.selectedAssets.count > 1) ?
+//        CTAssetsPickerLocalizedString(@"%@ Videos Selected", nil) :
+//        CTAssetsPickerLocalizedString(@"%@ Video Selected", nil);
+//
+//    NSNumberFormatter *nf = [NSNumberFormatter new];
+//
+    float size = 0;
+    for (PHAsset* asset in self.selectedAssets)
+    {
+        size +=asset.fileSize;
+    }
+    size = size/1024/1024;
+    return [NSString stringWithFormat:@"Selected %.1f MB",size];
 }
 
 
